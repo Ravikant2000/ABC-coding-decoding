@@ -1,102 +1,76 @@
 from itertools import permutations
 
-def has_unique_solution(mapping):
-    return len(mapping.values()) == len(set(mapping.values()))
 
-def find_all_solutions(num1, num2, operation, result, fixed_assignments):
-    char_count = {}
-    char_to_digit = {}
-
-    for char, digit in fixed_assignments.items():
-        char_to_digit[char] = digit
-
-    for char in num1 + num2 + result:
-        if char not in char_to_digit:
-            if char in char_count:
-                char_count[char] += 1
-            else:
-                char_count[char] = 1
-
-    unique_chars = list(char_count.keys())
-
-    if len(unique_chars) + len(char_to_digit) > 10:
-        print('Too many attributes: Cannot assign digits')
-        return "Too many attributes: Cannot assign digits"
+def find_all_solutions(num1, num2, operation, result):
+    unique_chars = set(num1 + num2 + result)
+    if len(unique_chars) > 10:
+        print("Too many unique chars cannot assign digits")
 
     digits = list(range(10))
-    char_permutations = permutations(digits, len(unique_chars))
+    chars_permutation = permutations(digits, len(unique_chars))
 
-    all_solutions = []
+    solutions = []
 
-    for perm in char_permutations:
-        current_mapping = char_to_digit.copy()
-        for i, char in enumerate(unique_chars):
-            current_mapping[char] = perm[i]
+    for perm in chars_permutation:
+        char_to_digit = dict(zip(unique_chars, perm))
+
+        if char_to_digit[num1[0]] == 0 or char_to_digit[num2[0]] == 0 or char_to_digit[result[0]] == 0:
+            continue
 
         try:
-            n1 = int(''.join(str(current_mapping[ch]) for ch in num1))
-            n2 = int(''.join(str(current_mapping[ch]) for ch in num2))
-            res = int(''.join(str(current_mapping[ch]) for ch in result))
+            n1 = int(''.join(str(char_to_digit[ch]) for ch in num1))
+            n2 = int(''.join(str(char_to_digit[ch]) for ch in num2))
+            res = int(''.join(str(char_to_digit[ch]) for ch in result))
+
         except KeyError:
             continue
 
-        if (operation == '+' and n1 + n2 == res) or \
-           (operation == '-' and n1 - n2 == res) or \
-           (operation == '*' and n1 * n2 == res) or \
-           (operation == '/' and n2 != 0 and n1 / n2 == res):
-            all_solutions.append((n1, n2, res, current_mapping))
+        if operation == '+' and n1 + n2 == res:
+            solutions.append((n1, n2, res, char_to_digit))
+        elif operation == '-' and n1 - n2 == res:
+            solutions.append((n1, n2, res, char_to_digit))
+        elif operation == '*' and n1 * n2 == res:
+            solutions.append((n1, n2, res, char_to_digit))
+        elif operation == '/' and n2 != 0 and n1 / n2 == res:
+            solutions.append((n1, n2, res, char_to_digit))
 
-    return all_solutions or "No Solutions Found"
+    if not solutions:
+        return "No solution found."
+    return solutions
+
 
 if __name__ == "__main__":
-    while True:
-        print("_________Welcome to Cryptarithm Solver__________")
-        fixed_assignments_input = input('Enter the fixed assignments (e.g., A=1,B=2): ').strip()
-        fixed_assignments = {}
+    print('Enter the inputs for the puzzle solver.')
+    num1 = input('Enter the first number in alphabet form (eg. ABC):').lower()
+    num2 = input('Enter the second number in alpbabet form (eg.DEF):').lower()
+    operation = input('Enter the operation (+,-,*,/): ')
+    result = input('Enter the result in alphabet form (eg. GHI): ').lower()
 
-        # Validate and parse fixed assignments
-        if fixed_assignments_input:
-            try:
-                pairs = fixed_assignments_input.split(',')
-                for pair in pairs:
-                    char, digit = pair.split('=')
-                    fixed_assignments[char.strip().upper()] = int(digit.strip())
-            except ValueError:
-                print("Invalid format for fixed assignments. Please use the format A=1,B=2.")
-                continue
+    solutions = find_all_solutions(num1, num2, operation, result)
 
-        num1 = input('Enter the first number: ').upper().strip()
-        num2 = input('Enter the second number: ').upper().strip()
-        operation = input('Enter the operation (+, -, *, /): ').strip()
-        result = input('Enter the result: ').upper().strip()
+    if isinstance(solutions, str):
+        print(solutions)
+    else:
+        print(f"\nFound {len(solutions)} solutions:\n")
+        for sol in solutions:
+            n1, n2, res, mapping = sol
+            print(f"Solved! {num1.upper()} = {n1}, {num2.upper()} = {n2}, {result.upper()} = {res}")
+            print(f"Mapping: {mapping}\n")
 
-        # Solve the puzzle
-        solutions = find_all_solutions(num1, num2, operation, result, fixed_assignments)
 
-        if solutions == "Too many attributes: Cannot assign digits":
-            continue  # Restart the loop if the problem can't be solved due to too many attributes
-        elif isinstance(solutions, str):
-            print(solutions)
-        else:
-            print(f"\nFound {len(solutions)} solutions:\n")
-            for sol in solutions:
-                n1, n2, res, mapping = sol
-                print(f"Solved! {num1} = {n1}, {num2} = {n2}, {result} = {res}")
-                print(f"Mapping: {mapping}\n")
 
-            unique_solutions = [sol for sol in solutions if has_unique_solution(sol[3])]
 
-            if unique_solutions:
-                print(f"\nFound {len(unique_solutions)} unique solutions:\n")
-                for sol in unique_solutions:
-                    n1, n2, res, mapping = sol
-                    print(f"Unique Solution: {num1} = {n1}, {num2} = {n2}, {result} = {res}")
-                    print(f"Mapping: {mapping}\n")
-            else:
-                print("No unique solution found.\n")
 
-        # Ask the user to retry or quit
-        retry = input("Would you like to solve another puzzle? (yes/no): ").strip().lower()
-        if retry != 'yes':
-            print("Thank you for using Cryptarithm Solver. Goodbye!")
-            break
+
+
+
+
+
+
+
+
+
+
+
+
+
